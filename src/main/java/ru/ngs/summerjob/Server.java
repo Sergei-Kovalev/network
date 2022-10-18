@@ -6,31 +6,50 @@ import java.net.Socket;
 
 public class Server {
     public static void main(String[] args) throws IOException {
-        ServerSocket socket = new ServerSocket(25225);
+        ServerSocket socket = new ServerSocket(25225, 2000);
         System.out.println("Server is started.");
 
         while (true) {
             Socket client = socket.accept();
-            handleRequest(client);
+            new SimpleServer(client).start();
         }
     }
+}
 
-    private static void handleRequest(Socket client) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(client.getInputStream()));
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
+class SimpleServer extends Thread {
+    private Socket client;
+    SimpleServer(Socket client) {
+        this.client = client;
+    }
 
-        StringBuilder sb = new StringBuilder("Hello, ");
-        String userName = br.readLine();
-        System.out.println("Server got string: " + userName);
 
-        sb.append(userName);
-        bw.write(sb.toString());
-        bw.newLine();
-        bw.flush();
+    public void run() {
+        handleRequest();
+    }
 
-        bw.close();
-        br.close();
+    private void handleRequest() {
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(client.getInputStream()));
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
 
-        client.close();
+            StringBuilder sb = new StringBuilder("Hello, ");
+            String userName = br.readLine();
+            System.out.println("Server got string: " + userName);
+            Thread.sleep(2000);
+
+            sb.append(userName);
+            bw.write(sb.toString());
+            bw.newLine();
+            bw.flush();
+
+            bw.close();
+            br.close();
+
+            client.close();
+        } catch (IOException e) {
+            e.printStackTrace(System.out);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
